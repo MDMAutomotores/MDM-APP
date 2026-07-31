@@ -14,10 +14,11 @@ export default async function handler(req, res) {
 
   if (req.method === "GET") {
     if (!key) return res.status(400).json({ error: "falta key" });
-    const value = await redis.get(PREFIX + key);
+    let value = await redis.get(PREFIX + key);
     if (value === null || value === undefined) {
       return res.status(404).json({ error: "not found" });
     }
+    if (typeof value !== "string") value = JSON.stringify(value);
     return res.status(200).json({ key, value, shared: true });
   }
 

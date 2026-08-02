@@ -141,6 +141,43 @@ function rowToCliente(r) {
   };
 }
 
+// ARREGLO: Field y Select estaban definidos DENTRO de ClienteForm, así que
+// React los trataba como un componente nuevo en cada re-render (cada tecla
+// presionada generaba un nuevo tipo de componente y el <input> se
+// desmontaba/montaba de nuevo, perdiendo el foco). Por eso solo se podía
+// escribir una letra por vez. Ahora están definidos afuera, reciben
+// value/onChange por props, y React reutiliza el mismo <input> del DOM.
+function Field({ label, value, onChange, type = "text", full }) {
+  return (
+    <div className={full ? "sm:col-span-2" : ""}>
+      <label className="block text-xs font-medium mb-1" style={{ color: C.textMuted }}>{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        className="w-full px-3 py-2.5 rounded-lg outline-none text-sm"
+        style={{ backgroundColor: C.surface2, border: `1px solid ${C.border}`, color: C.text }}
+      />
+    </div>
+  );
+}
+
+function SelectField({ label, value, onChange, options }) {
+  return (
+    <div>
+      <label className="block text-xs font-medium mb-1" style={{ color: C.textMuted }}>{label}</label>
+      <select
+        value={value}
+        onChange={onChange}
+        className="w-full px-3 py-2.5 rounded-lg outline-none text-sm"
+        style={{ backgroundColor: C.surface2, border: `1px solid ${C.border}`, color: C.text }}
+      >
+        {options.map((o) => <option key={o} value={o}>{o}</option>)}
+      </select>
+    </div>
+  );
+}
+
 // ---------- Fotos (cámara / galería) ----------
 // ARREGLO: antes había un solo botón "Agregar foto" que abría el selector
 // genérico de archivos; en muchos celulares eso no ofrece la opción de
@@ -285,8 +322,17 @@ function PinPad({ value, onChange, maxLength = 4 }) {
 function Brand() {
   return (
     <div className="flex items-center gap-2 mb-1">
-      <div className="h-11 w-11 rounded-lg flex items-center justify-center overflow-hidden" style={{ backgroundColor: "#F4F5F6" }}>
-        <img src={LOGO_MDM} alt="MDM Automotores" className="h-full w-full object-contain p-2" />
+      <div
+        className="rounded-lg flex items-center justify-center overflow-hidden shrink-0"
+        style={{ backgroundColor: "#F4F5F6", width: 44, height: 44 }}
+      >
+        <img
+          src={LOGO_MDM}
+          alt="MDM Automotores"
+          width={44}
+          height={44}
+          className="h-full w-full object-contain p-0.5"
+        />
       </div>
       <span className="text-sm font-semibold tracking-wide" style={{ color: C.textMuted }}>MDM AUTOMOTORES</span>
     </div>
@@ -332,6 +378,7 @@ function LoginScreen({ usuarios, onCrearAdmin, onLogin }) {
   if (usuarios.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center px-5" style={{ backgroundColor: C.bg }}>
+<div className="min-h-screen flex items-center justify-center px-5" style={{ backgroundColor: C.bg }}>
         <div className="w-full max-w-sm text-center">
           <div className="flex justify-center"><Brand /></div>
           <h1 className="text-xl font-bold mb-1" style={{ color: C.text }}>Configurar administrador</h1>
@@ -600,33 +647,6 @@ function ClienteForm({ initial, usuarioActual, onSave, onClose }) {
     })();
   }, []);
 
-  const Field = ({ label, k, type = "text", full }) => (
-    <div className={full ? "sm:col-span-2" : ""}>
-      <label className="block text-xs font-medium mb-1" style={{ color: C.textMuted }}>{label}</label>
-      <input
-        type={type}
-        value={f[k]}
-        onChange={set(k)}
-        className="w-full px-3 py-2.5 rounded-lg outline-none text-sm"
-        style={{ backgroundColor: C.surface2, border: `1px solid ${C.border}`, color: C.text }}
-      />
-    </div>
-  );
-
-  const Select = ({ label, k, options }) => (
-    <div>
-      <label className="block text-xs font-medium mb-1" style={{ color: C.textMuted }}>{label}</label>
-      <select
-        value={f[k]}
-        onChange={set(k)}
-        className="w-full px-3 py-2.5 rounded-lg outline-none text-sm"
-        style={{ backgroundColor: C.surface2, border: `1px solid ${C.border}`, color: C.text }}
-      >
-        {options.map((o) => <option key={o} value={o}>{o}</option>)}
-      </select>
-    </div>
-  );
-
   const submit = async () => {
     if (!f.nombre.trim()) return;
     const now = new Date().toLocaleDateString("es-AR");
@@ -686,27 +706,27 @@ function ClienteForm({ initial, usuarioActual, onSave, onClose }) {
           <div>
             <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: C.textMuted }}>Datos del cliente</p>
             <div className="grid sm:grid-cols-2 gap-3">
-              <Field label="Nombre y apellido" k="nombre" full />
-              <Field label="DNI / CUIT" k="dni_cuit" />
-              <Field label="Teléfono" k="telefono" />
-              <Field label="Email" k="email" />
-              <Field label="Dirección" k="direccion" full />
-              <Field label="Localidad" k="localidad" />
-              <Field label="Provincia" k="provincia" />
-              <Field label="Código postal" k="codigo_postal" />
+              <Field label="Nombre y apellido" value={f.nombre} onChange={set("nombre")} full />
+              <Field label="DNI / CUIT" value={f.dni_cuit} onChange={set("dni_cuit")} />
+              <Field label="Teléfono" value={f.telefono} onChange={set("telefono")} />
+              <Field label="Email" value={f.email} onChange={set("email")} />
+              <Field label="Dirección" value={f.direccion} onChange={set("direccion")} full />
+              <Field label="Localidad" value={f.localidad} onChange={set("localidad")} />
+              <Field label="Provincia" value={f.provincia} onChange={set("provincia")} />
+              <Field label="Código postal" value={f.codigo_postal} onChange={set("codigo_postal")} />
             </div>
           </div>
 
           <div>
             <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: C.textMuted }}>Vehículo</p>
             <div className="grid sm:grid-cols-2 gap-3">
-              <Field label="Marca" k="marca" />
-              <Field label="Modelo" k="modelo" />
-              <Field label="Año" k="anio" />
-              <Field label="Patente" k="patente" />
-              <Field label="Chasis / VIN" k="chasis" />
-              <Field label="Kilometraje" k="km" />
-              <Field label="Color" k="color" />
+              <Field label="Marca" value={f.marca} onChange={set("marca")} />
+              <Field label="Modelo" value={f.modelo} onChange={set("modelo")} />
+              <Field label="Año" value={f.anio} onChange={set("anio")} />
+              <Field label="Patente" value={f.patente} onChange={set("patente")} />
+              <Field label="Chasis / VIN" value={f.chasis} onChange={set("chasis")} />
+              <Field label="Kilometraje" value={f.km} onChange={set("km")} />
+              <Field label="Color" value={f.color} onChange={set("color")} />
             </div>
             <div className="mt-3">
               <FotosSection
@@ -721,10 +741,10 @@ function ClienteForm({ initial, usuarioActual, onSave, onClose }) {
           <div>
             <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: C.textMuted }}>Comercial</p>
             <div className="grid sm:grid-cols-2 gap-3">
-              <Field label="Precio (ARS)" k="precio" type="number" />
-              <Select label="Forma de pago" k="forma_pago" options={FORMAS_PAGO} />
-              <Select label="Estado de negociación" k="estado_negociacion" options={ESTADOS_NEG} />
-              <Select label="Estado de documentación" k="estado_documentacion" options={ESTADOS_DOC} />
+              <Field label="Precio (ARS)" value={f.precio} onChange={set("precio")} type="number" />
+              <SelectField label="Forma de pago" value={f.forma_pago} onChange={set("forma_pago")} options={FORMAS_PAGO} />
+              <SelectField label="Estado de negociación" value={f.estado_negociacion} onChange={set("estado_negociacion")} options={ESTADOS_NEG} />
+              <SelectField label="Estado de documentación" value={f.estado_documentacion} onChange={set("estado_documentacion")} options={ESTADOS_DOC} />
             </div>
             <label className="flex items-center gap-2.5 cursor-pointer select-none mt-3">
               <input
@@ -739,188 +759,7 @@ function ClienteForm({ initial, usuarioActual, onSave, onClose }) {
 
           <div>
             <label className="flex items-center gap-2.5 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={f.entrega}
-                onChange={(e) => setF({ ...f, entrega: e.target.checked })}
-                className="h-4 w-4"
-              />
-              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: C.textMuted }}>
-                El cliente entrega un vehículo (parte de pago)
-              </span>
-            </label>
-            {f.entrega && (
-              <div className="grid sm:grid-cols-2 gap-3 mt-3 p-3 rounded-lg" style={{ backgroundColor: C.surface2, border: `1px solid ${C.border}` }}>
-                <Field label="Marca" k="entrega_marca" />
-                <Field label="Modelo" k="entrega_modelo" />
-                <Field label="Año" k="entrega_anio" />
-                <Field label="Patente" k="entrega_patente" />
-                <Field label="Chasis / VIN" k="entrega_chasis" />
-                <Field label="Kilometraje" k="entrega_km" />
-                <Field label="Color" k="entrega_color" />
-                <Field label="Estado del vehículo" k="entrega_estado" full />
-                <div className="sm:col-span-2">
-                  <FotosSection
-                    label="Fotos del vehículo que entrega"
-                    fotos={fotosEntrega}
-                    onAdd={(src) => setFotosEntrega((p) => [...p, src])}
-                    onRemove={(i) => setFotosEntrega((p) => p.filter((_, idx) => idx !== i))}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium mb-1" style={{ color: C.textMuted }}>Observaciones</label>
-            <textarea
-              value={f.observaciones}
-              onChange={set("observaciones")}
-              rows={3}
-              className="w-full px-3 py-2.5 rounded-lg outline-none text-sm resize-none"
-              style={{ backgroundColor: C.surface2, border: `1px solid ${C.border}`, color: C.text }}
-            />
-          </div>
-        </div>
-
-        <div className="sticky bottom-0 flex gap-3 px-5 py-4" style={{ backgroundColor: C.bg, borderTop: `1px solid ${C.border}` }}>
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl text-sm font-semibold" style={{ backgroundColor: C.surface2, color: C.text }}>
-            Cancelar
-          </button>
-          <button
-            onClick={submit}
-            disabled={!f.nombre.trim()}
-            className="flex-1 py-3 rounded-xl text-sm font-semibold disabled:opacity-40"
-            style={{ backgroundColor: C.accent, color: "#0B0E13" }}
-          >
-            Guardar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ---------- Tarjeta de cliente ----------
-function ClienteCard({ c, onEdit, onDelete, onOpen }) {
-  const isCompra = c.operacion === "compra";
-  return (
-    <div
-      onClick={() => onOpen(c)}
-      className="rounded-xl p-4 relative cursor-pointer active:opacity-80"
-      style={{ backgroundColor: C.surface, border: `1px solid ${C.border}`, borderLeft: `3px solid ${isCompra ? C.compra : C.venta}` }}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span
-              className="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide"
-              style={{ backgroundColor: isCompra ? C.compraBg : C.ventaBg, color: isCompra ? C.compra : C.venta }}
-            >
-              {isCompra ? "Compra" : "Venta"}
-            </span>
-            <span className="text-[11px] font-medium" style={{ color: ESTADO_NEG_COLOR[c.estado_negociacion] }}>
-              {c.estado_negociacion}
-            </span>
-            {c.entrega && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: C.surface2, color: C.textMuted }}>
-                + entrega
-              </span>
-            )}
-          </div>
-          <p className="font-semibold text-sm truncate" style={{ color: C.text }}>{c.nombre || "Sin nombre"}</p>
-          <p className="text-xs truncate" style={{ color: C.textMuted }}>
-            {[c.marca, c.modelo, c.anio].filter(Boolean).join(" ") || "Vehículo sin datos"}
-            {c.patente && ` · ${c.patente}`}
-          </p>
-        </div>
-        <div className="flex gap-1 shrink-0">
-          <button onClick={(e) => { e.stopPropagation(); onEdit(c); }} className="p-1.5 rounded-lg" style={{ backgroundColor: C.surface2 }}>
-            <Pencil size={14} color={C.textMuted} />
-          </button>
-          <button onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} className="p-1.5 rounded-lg" style={{ backgroundColor: C.surface2 }}>
-            <Trash2 size={14} color={C.danger} />
-          </button>
-        </div>
-      </div>
-      <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: `1px solid ${C.border}` }}>
-        <span className="text-sm font-bold" style={{ color: C.text }}>{formatARS(c.precio)}</span>
-        <span className="text-[11px]" style={{ color: C.textMuted }}>{c.telefono || c.email || "sin contacto"}</span>
-      </div>
-    </div>
-  );
-}
-
-// ---------- Detalle e historial del cliente ----------
-function ClienteDetalle({ cliente, usuarioActual, onClose, onAddNota, onEdit }) {
-  const [nota, setNota] = useState("");
-  const [fotos, setFotos] = useState({ vehiculo: [], entrega: [] });
-  const isCompra = cliente.operacion === "compra";
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const r = await window.storage.get(`fotos:${cliente.id}`, true);
-        setFotos(r ? JSON.parse(r.value) : { vehiculo: [], entrega: [] });
-      } catch {
-        setFotos({ vehiculo: [], entrega: [] });
-      }
-    })();
-  }, [cliente.id]);
-
-  const Row = ({ label, value }) => (
-    !value ? null : (
-      <div className="flex justify-between gap-3 py-1.5" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <span className="text-xs" style={{ color: C.textMuted }}>{label}</span>
-        <span className="text-xs font-medium text-right" style={{ color: C.text }}>{value}</span>
-      </div>
-    )
-  );
-
-  const Galeria = ({ label, srcs }) => (
-    !srcs || srcs.length === 0 ? null : (
-      <div>
-        <p className="text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: C.textMuted }}>{label}</p>
-        <div className="flex flex-wrap gap-2">
-          {srcs.map((src, i) => (
-            <a key={i} href={src} target="_blank" rel="noreferrer" className="h-20 w-20 rounded-lg overflow-hidden block" style={{ border: `1px solid ${C.border}` }}>
-              <img src={src} className="h-full w-full object-cover" alt="" />
-            </a>
-          ))}
-        </div>
-      </div>
-    )
-  );
-
-  const enviarNota = () => {
-    if (!nota.trim()) return;
-    onAddNota(cliente.id, nota.trim());
-    setNota("");
-  };
-
-  const historialOrdenado = [...(cliente.historial || [])].reverse();
-
-  return (
-    <div className="fixed inset-0 z-40 flex sm:items-center sm:justify-center" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
-      <div
-        className="w-full sm:max-w-lg sm:rounded-2xl sm:max-h-[88vh] h-full sm:h-auto overflow-y-auto"
-        style={{ backgroundColor: C.bg, border: `1px solid ${C.border}` }}
-      >
-        <div className="sticky top-0 flex items-center justify-between px-5 py-4 z-10" style={{ backgroundColor: C.bg, borderBottom: `1px solid ${C.border}` }}>
-          <div>
-            <span
-              className="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide"
-              style={{ backgroundColor: isCompra ? C.compraBg : C.ventaBg, color: isCompra ? C.compra : C.venta }}
-            >
-              {isCompra ? "Compra" : "Venta"}
-            </span>
-            <h2 className="text-base font-bold mt-1" style={{ color: C.text }}>{cliente.nombre}</h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => onEdit(cliente)} className="p-2 rounded-lg" style={{ backgroundColor: C.surface2 }}>
-              <Pencil size={15} color={C.textMuted} />
-            </button>
-            <button onClick={onClose}><X size={20} color={C.textMuted} /></button>
+              <button onClick={onClose}><X size={20} color={C.textMuted} /></button>
           </div>
         </div>
 
@@ -1119,6 +958,7 @@ export default function App() {
   const handleBorrar = async (id) => {
     await persistClientes(clientes.filter((c) => c.id !== id));
     try {
+      try {
       const r = await window.storage.get(`fotos:${id}`, true);
       if (r) await window.storage.delete(`fotos:${id}`, true);
     } catch {}
@@ -1183,7 +1023,13 @@ export default function App() {
       // que el <a download> tradicional: abre el panel nativo de "compartir"
       // del sistema operativo, desde donde se puede guardar en Archivos,
       // Drive, WhatsApp, etc. Si no está disponible, cae al método clásico.
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      // ARREGLO: en computadoras de escritorio, algunos navegadores también
+      // exponen navigator.canShare()=true pero abren un panel de compartir
+      // vacío/confuso (sin apps para recibir el archivo) y el archivo nunca
+      // se llega a guardar. Por eso ahora el share nativo se usa SOLO en
+      // celulares; en desktop siempre se hace la descarga clásica.
+      const esCelular = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (esCelular && navigator.canShare && navigator.canShare({ files: [file] })) {
         navigator.share({
           files: [file],
           title: "Clientes MDM Automotores",
@@ -1272,8 +1118,17 @@ export default function App() {
       <div className="sticky top-0 z-20 px-4 pt-4 pb-3" style={{ backgroundColor: C.bg, borderBottom: `1px solid ${C.border}` }}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-lg flex items-center justify-center overflow-hidden" style={{ backgroundColor: "#F4F5F6" }}>
-              <img src={LOGO_MDM} alt="MDM Automotores" className="h-full w-full object-contain p-2" />
+            <div
+              className="rounded-lg flex items-center justify-center overflow-hidden shrink-0"
+              style={{ backgroundColor: "#F4F5F6", width: 36, height: 36 }}
+            >
+              <img
+                src={LOGO_MDM}
+                alt="MDM Automotores"
+                width={36}
+                height={36}
+                className="h-full w-full object-contain p-0.5"
+              />
             </div>
             <div>
               <p className="text-sm font-bold leading-tight" style={{ color: C.text }}>MDM Automotores</p>

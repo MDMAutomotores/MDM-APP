@@ -1198,30 +1198,13 @@ export default function App() {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
 
-      // En celulares, navigator.share (con archivos) suele funcionar mejor
-      // que el <a download> tradicional: abre el panel nativo de "compartir"
-      // del sistema operativo, desde donde se puede guardar en Archivos,
-      // Drive, WhatsApp, etc. Si no está disponible, cae al método clásico.
-      // ARREGLO: en computadoras de escritorio, algunos navegadores también
-      // exponen navigator.canShare()=true pero abren un panel de compartir
-      // vacío/confuso (sin apps para recibir el archivo) y el archivo nunca
-      // se llega a guardar. Por eso ahora el share nativo se usa SOLO en
-      // celulares; en desktop siempre se hace la descarga clásica.
-      const esCelular = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if (esCelular && navigator.canShare && navigator.canShare({ files: [file] })) {
-        navigator.share({
-          files: [file],
-          title: "Clientes MDM Automotores",
-        }).then(() => {
-          setToast("Excel compartido");
-        }).catch((err) => {
-          if (err?.name !== "AbortError") {
-            setToast("No se pudo compartir el Excel");
-          }
-        });
-        return;
-      }
-
+      // ARREGLO: se sacó por completo el uso de navigator.share. En la
+      // práctica, en varios celulares el panel nativo de "compartir" no
+      // tenía ninguna app lista para recibir el archivo y la operación
+      // fallaba con el error "No se pudo compartir el Excel", aunque el
+      // archivo se generaba bien. La descarga directa con <a download> es
+      // más predecible y funciona igual en celular que en computadora: el
+      // archivo queda guardado en la carpeta de Descargas del dispositivo.
       const blob = new Blob([out], { type: file.type });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");

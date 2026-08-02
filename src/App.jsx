@@ -515,6 +515,47 @@ function CambiarPin({ usuarioActual, onGuardar, onClose }) {
   );
 }
 
+// ---------- Editar mi nombre ----------
+// NUEVO: antes no existía forma de cambiar el nombre propio (ni siquiera
+// el del administrador) sin editar la base de datos a mano. Este modal
+// permite a cualquier usuario logueado cambiar su propio nombre.
+function EditarNombre({ usuarioActual, onGuardar, onClose }) {
+  const [nombre, setNombre] = useState(usuarioActual.nombre);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ backgroundColor: "rgba(0,0,0,0.6)" }}>
+      <div className="w-full max-w-xs rounded-2xl p-5" style={{ backgroundColor: C.surface, border: `1px solid ${C.border}` }}>
+        <div className="flex justify-between items-center mb-3">
+          <p className="text-sm font-semibold" style={{ color: C.text }}>Editar mi nombre</p>
+          <button onClick={onClose}><X size={18} color={C.textMuted} /></button>
+        </div>
+        <input
+          autoFocus
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          placeholder="Tu nombre"
+          className="w-full px-3 py-2.5 rounded-lg outline-none text-sm mb-3"
+          style={{ backgroundColor: C.surface2, border: `1px solid ${C.border}`, color: C.text }}
+          onKeyDown={(e) => e.key === "Enter" && nombre.trim() && onGuardar(nombre.trim())}
+        />
+        <div className="flex gap-2">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-xs font-semibold" style={{ backgroundColor: C.surface2, color: C.text }}>
+            Cancelar
+          </button>
+          <button
+            onClick={() => nombre.trim() && onGuardar(nombre.trim())}
+            disabled={!nombre.trim()}
+            className="flex-1 py-2.5 rounded-lg text-xs font-semibold disabled:opacity-40"
+            style={{ backgroundColor: C.accent, color: "#0B0E13" }}
+          >
+            Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Panel del administrador: gestionar usuarios ----------
 // ARREGLO: se agregó onEliminar + usuarioActual como props, botón de
 // eliminar por usuario (oculto para admins y para el usuario logueado) y
@@ -1044,6 +1085,7 @@ export default function App() {
   const [toast, setToast] = useState("");
   const [panelUsuariosOpen, setPanelUsuariosOpen] = useState(false);
   const [cambiarPinOpen, setCambiarPinOpen] = useState(false);
+  const [editarNombreOpen, setEditarNombreOpen] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -1124,6 +1166,14 @@ export default function App() {
     setUsuarioActual({ ...usuarioActual, pin: nuevoPin });
     setCambiarPinOpen(false);
     setToast("PIN actualizado");
+  };
+
+  const handleEditarNombre = async (nuevoNombre) => {
+    const next = usuarios.map((u) => (u.id === usuarioActual.id ? { ...u, nombre: nuevoNombre } : u));
+    await persistUsuarios(next);
+    setUsuarioActual({ ...usuarioActual, nombre: nuevoNombre });
+    setEditarNombreOpen(false);
+    setToast("Nombre actualizado");
   };
 
   const handleGuardarCliente = async (c) => {
@@ -1305,6 +1355,9 @@ export default function App() {
                 <Users size={15} color={C.textMuted} />
               </button>
             )}
+            <button onClick={() => setEditarNombreOpen(true)} className="p-2 rounded-lg" style={{ backgroundColor: C.surface2 }}>
+              <Pencil size={15} color={C.textMuted} />
+            </button>
             <button onClick={() => setCambiarPinOpen(true)} className="p-2 rounded-lg" style={{ backgroundColor: C.surface2 }}>
               <Key size={15} color={C.textMuted} />
             </button>
@@ -1468,6 +1521,14 @@ export default function App() {
           usuarioActual={usuarioActual}
           onGuardar={handleCambiarPin}
           onClose={() => setCambiarPinOpen(false)}
+        />
+      )}
+
+      {editarNombreOpen && (
+        <EditarNombre
+          usuarioActual={usuarioActual}
+          onGuardar={handleEditarNombre}
+          onClose={() => setEditarNombreOpen(false)}
         />
       )}
 

@@ -44,7 +44,8 @@ const EMPTY_CLIENTE = {
   operacion: "venta",
   nombre: "", dni_cuit: "", telefono: "", email: "", direccion: "",
   localidad: "", provincia: "", codigo_postal: "",
-  marca: "", modelo: "", anio: "", patente: "", chasis: "", km: "", color: "",
+  marca: "", modelo: "", anio: "", patente: "", chasis: "", motor: "", km: "", color: "",
+  tiene_gnc: false, gnc_vencimiento_oblea: "", gnc_prueba_hidraulica: "",
   precio: "", forma_pago: FORMAS_PAGO[0], plan_ahorro: false,
   estado_negociacion: ESTADOS_NEG[0], estado_documentacion: ESTADOS_DOC[0],
   observaciones: "",
@@ -57,7 +58,8 @@ const EMPTY_CLIENTE = {
 const EXPORT_HEADERS = [
   "Operación", "Nombre", "DNI/CUIT", "Teléfono", "Email", "Dirección",
   "Localidad", "Provincia", "Código postal",
-  "Marca", "Modelo", "Año", "Patente", "Chasis/VIN", "Kilometraje", "Color",
+  "Marca", "Modelo", "Año", "Patente", "Chasis/VIN", "Número de motor", "Kilometraje", "Color",
+  "Tiene GNC", "Vencimiento oblea GNC", "Prueba hidráulica GNC",
   "Precio", "Forma de pago", "Plan de ahorro", "Estado negociación", "Estado documentación",
   "Entrega vehículo", "Marca entrega", "Modelo entrega", "Año entrega",
   "Patente entrega", "Chasis/VIN entrega", "Km entrega", "Color entrega", "Estado entrega",
@@ -104,7 +106,11 @@ function clienteToRow(c) {
     "Nombre": c.nombre, "DNI/CUIT": c.dni_cuit, "Teléfono": c.telefono, "Email": c.email, "Dirección": c.direccion,
     "Localidad": c.localidad, "Provincia": c.provincia, "Código postal": c.codigo_postal,
     "Marca": c.marca, "Modelo": c.modelo, "Año": c.anio, "Patente": c.patente, "Chasis/VIN": c.chasis,
-    "Kilometraje": c.km, "Color": c.color, "Precio": c.precio, "Forma de pago": c.forma_pago,
+    "Número de motor": c.motor,
+    "Kilometraje": c.km, "Color": c.color,
+    "Tiene GNC": c.tiene_gnc ? "Sí" : "No",
+    "Vencimiento oblea GNC": c.gnc_vencimiento_oblea || "",
+    "Prueba hidráulica GNC": c.gnc_prueba_hidraulica || "", "Precio": c.precio, "Forma de pago": c.forma_pago,
     "Plan de ahorro": c.plan_ahorro ? "Sí" : "No",
     "Estado negociación": c.estado_negociacion, "Estado documentación": c.estado_documentacion,
     "Entrega vehículo": c.entrega ? "Sí" : "No",
@@ -125,7 +131,10 @@ function rowToCliente(r) {
     email: get("Email"), direccion: get("Dirección"),
     localidad: get("Localidad"), provincia: get("Provincia"), codigo_postal: get("Código postal"),
     marca: get("Marca"), modelo: get("Modelo"), anio: get("Año"), patente: get("Patente"),
-    chasis: get("Chasis/VIN"), km: get("Kilometraje"), color: get("Color"),
+    chasis: get("Chasis/VIN"), motor: get("Número de motor"), km: get("Kilometraje"), color: get("Color"),
+    tiene_gnc: get("Tiene GNC").toLowerCase().startsWith("s"),
+    gnc_vencimiento_oblea: get("Vencimiento oblea GNC"),
+    gnc_prueba_hidraulica: get("Prueba hidráulica GNC"),
     precio: get("Precio"), forma_pago: get("Forma de pago") || FORMAS_PAGO[0],
     plan_ahorro: get("Plan de ahorro").toLowerCase().startsWith("s"),
     estado_negociacion: get("Estado negociación") || ESTADOS_NEG[0],
@@ -765,8 +774,28 @@ function ClienteForm({ initial, usuarioActual, onSave, onClose }) {
               <Field label="Año" value={f.anio} onChange={set("anio")} />
               <Field label="Patente" value={f.patente} onChange={set("patente")} />
               <Field label="Chasis / VIN" value={f.chasis} onChange={set("chasis")} />
+              <Field label="Número de motor" value={f.motor} onChange={set("motor")} />
               <Field label="Kilometraje" value={f.km} onChange={set("km")} />
               <Field label="Color" value={f.color} onChange={set("color")} />
+            </div>
+            <div className="mt-3">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={f.tiene_gnc}
+                  onChange={(e) => setF({ ...f, tiene_gnc: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: C.textMuted }}>
+                  Tiene equipo de GNC
+                </span>
+              </label>
+              {f.tiene_gnc && (
+                <div className="grid sm:grid-cols-2 gap-3 mt-3 p-3 rounded-lg" style={{ backgroundColor: C.surface2, border: `1px solid ${C.border}` }}>
+                  <Field label="Vencimiento de oblea" type="date" value={f.gnc_vencimiento_oblea} onChange={set("gnc_vencimiento_oblea")} />
+                  <Field label="Prueba hidráulica" type="date" value={f.gnc_prueba_hidraulica} onChange={set("gnc_prueba_hidraulica")} />
+                </div>
+              )}
             </div>
             <div className="mt-3">
               <FotosSection
@@ -1002,8 +1031,12 @@ function ClienteDetalle({ cliente, usuarioActual, onClose, onAddNota, onEdit }) 
             <Row label="Año" value={cliente.anio} />
             <Row label="Patente" value={cliente.patente} />
             <Row label="Chasis / VIN" value={cliente.chasis} />
+            <Row label="Número de motor" value={cliente.motor} />
             <Row label="Kilometraje" value={cliente.km} />
             <Row label="Color" value={cliente.color} />
+            <Row label="Tiene GNC" value={cliente.tiene_gnc ? "Sí" : ""} />
+            <Row label="Vencimiento de oblea" value={cliente.gnc_vencimiento_oblea} />
+            <Row label="Prueba hidráulica" value={cliente.gnc_prueba_hidraulica} />
             <div className="mt-2"><Galeria label="Fotos del vehículo" srcs={fotos.vehiculo} /></div>
           </div>
 
